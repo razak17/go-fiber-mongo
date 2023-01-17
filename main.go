@@ -1,14 +1,10 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"github.com/razak17/go-fiber-mongo/database"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func main() {
@@ -35,29 +31,25 @@ func initApp() error {
 	defer database.CloseDB()
 
 	// create app
-	app := fiber.New()
+	app := generateApp()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World 👋!")
-	})
-
-	app.Post("/hello", func(c *fiber.Ctx) error {
-		doc := bson.M{"Atonement": "Ian McEwan"}
-		collection := database.GetDBCollection("books")
-		result, err := collection.InsertOne(context.TODO(), doc)
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		}
-
-		fmt.Printf("Inserted document with _id: %v\n", result.InsertedID)
-
-		// return the book
-		return c.Status(201).JSON(fiber.Map{
-			"result": result,
-		})
-	})
+	// app.Post("/hello", func(c *fiber.Ctx) error {
+	// 	doc := bson.M{"Atonement": "Ian McEwan"}
+	// 	collection := database.GetDBCollection("books")
+	// 	result, err := collection.InsertOne(context.TODO(), doc)
+	// 	if err != nil {
+	// 		return c.Status(500).JSON(fiber.Map{
+	// 			"error": err.Error(),
+	// 		})
+	// 	}
+	//
+	// 	fmt.Printf("Inserted document with _id: %v\n", result.InsertedID)
+	//
+	// 	// return the book
+	// 	return c.Status(201).JSON(fiber.Map{
+	// 		"result": result,
+	// 	})
+	// })
 
 	// start server
 	var port string
