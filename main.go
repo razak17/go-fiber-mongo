@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 	"github.com/razak17/go-fiber-mongo/database"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func main() {
@@ -15,27 +16,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// defer closing db
-	defer database.CloseDB()
-
-	// create app
-	app := fiber.New()
-
-	// add basic middleware
-	app.Use(logger.New())
-	app.Use(recover.New())
-
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World 👋!")
-	})
-
-	// start server
-	var port string
-	if port = os.Getenv("PORT"); port == "" {
-		port = "8080"
-	}
-	app.Listen(":" + port)
 }
 
 func initApp() error {
@@ -50,6 +30,41 @@ func initApp() error {
 	if err != nil {
 		return err
 	}
+
+	// defer closing db
+	defer database.CloseDB()
+
+	// create app
+	app := fiber.New()
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World 👋!")
+	})
+
+	app.Post("/hello", func(c *fiber.Ctx) error {
+		doc := bson.M{"Atonement": "Ian McEwan"}
+		collection := database.GetDBCollection("books")
+		result, err := collection.InsertOne(context.TODO(), doc)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		fmt.Printf("Inserted document with _id: %v\n", result.InsertedID)
+
+		// return the book
+		return c.Status(201).JSON(fiber.Map{
+			"result": result,
+		})
+	})
+
+	// start server
+	var port string
+	if port = os.Getenv("PORT"); port == "" {
+		port = "8080"
+	}
+	app.Listen(":" + port)
 
 	return nil
 }
