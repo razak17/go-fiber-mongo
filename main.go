@@ -33,38 +33,21 @@ func initApp() error {
 	// create app
 	app := generateApp()
 
-	// app.Post("/hello", func(c *fiber.Ctx) error {
-	// 	doc := bson.M{"Atonement": "Ian McEwan"}
-	// 	collection := database.GetDBCollection("books")
-	// 	result, err := collection.InsertOne(context.TODO(), doc)
-	// 	if err != nil {
-	// 		return c.Status(500).JSON(fiber.Map{
-	// 			"error": err.Error(),
-	// 		})
-	// 	}
-	//
-	// 	fmt.Printf("Inserted document with _id: %v\n", result.InsertedID)
-	//
-	// 	// return the book
-	// 	return c.Status(201).JSON(fiber.Map{
-	// 		"result": result,
-	// 	})
-	// })
-
 	// start server
-	var port string
-	if port = os.Getenv("PORT"); port == "" {
-		port = "8080"
-	}
+	port := os.Getenv("PORT")
+
 	app.Listen(":" + port)
 
 	return nil
 }
 
 func loadEnv() error {
-	err := godotenv.Load()
-	if err != nil {
-		return err
+	goEnv := os.Getenv("GO_ENV")
+	if goEnv == "" {
+		err := godotenv.Load()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
