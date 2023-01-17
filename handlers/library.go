@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/razak17/go-fiber-mongo/database"
 	"github.com/razak17/go-fiber-mongo/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type libraryDTO struct {
@@ -24,19 +24,17 @@ func CreateLibraryHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	fmt.Println(newLibrary)
-
 	// create the library
 	collection := database.GetDBCollection("libraries")
 	result, err := collection.InsertOne(context.TODO(), newLibrary)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
-			"error":   "Failed to create book",
+			"error":   "Failed to create library",
 			"message": err.Error(),
 		})
 	}
 
-	// return the book
+	// return the library
 	return c.Status(201).JSON(fiber.Map{
 		"result": result.InsertedID,
 	})
@@ -68,4 +66,33 @@ func GetLibraries(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(fiber.Map{"data": libraries})
+}
+
+func GetLibrary(c *fiber.Ctx) error {
+	collection := database.GetDBCollection("libraries")
+
+	// find the library
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "id is required",
+		})
+	}
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": "invalid id",
+		})
+	}
+
+	library := models.Library{}
+
+	err = collection.FindOne(c.Context(), bson.M{"_id": objectId}).Decode(&library)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"data": library})
 }
