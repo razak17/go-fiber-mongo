@@ -21,8 +21,9 @@ func generateApp() *fiber.App {
 	libGroup.Get("/:id", handlers.GetLibrary)
 	libGroup.Post("/", handlers.CreateLibraryHandler)
 	libGroup.Put("/:id", handlers.UpdateLibrary)
+	libGroup.Delete("/:id", handlers.DeleteLibrary)
 
-	libGroup.Post("/book/:libraryId", handlers.CreateBook)
+	libGroup.Post("/book", handlers.CreateBook)
 
 	return app
 }
