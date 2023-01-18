@@ -160,3 +160,7 @@ func DeleteLibrary(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"result": result})
 }
+
+func GetLibraryBooks(c *fiber.Ctx) error {
+	return c.SendString("GetLibraryBooks")
+}

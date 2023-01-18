@@ -50,5 +50,21 @@ func CreateBook(c *fiber.Ctx) error {
 	}
 
 	// return the library
-	return c.Status(fiber.StatusCreated).SendString(fmt.Sprintf("Created book with id: %s", result.InsertedID))
+	return c.Status(fiber.StatusCreated).SendString(fmt.Sprintf("Created book with id: %s", result))
+}
+
+func GetBooks(c *fiber.Ctx) error {
+	return c.SendString("Get books")
+}
+
+func GetBook(c *fiber.Ctx) error {
+	return c.SendString("Get book")
+}
+
+func UpdateBook(c *fiber.Ctx) error {
+	return c.SendString("Update book")
+}
+
+func DeleteBook(c *fiber.Ctx) error {
+	return c.SendString("Delete book")
 }
