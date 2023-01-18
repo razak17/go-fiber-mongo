@@ -11,9 +11,9 @@ import (
 )
 
 type libraryDTO struct {
-	Name    string        `json:"name" bson:"name"`
-	Address string        `json:"address" bson:"address"`
-	Empty   []models.Book `json:"no_exists" bson:"books"`
+	Name    string   `json:"name" bson:"name"`
+	Address string   `json:"address" bson:"address"`
+	Empty   []string `json:"no_exists" bson:"books"`
 }
 
 func CreateLibraryHandler(c *fiber.Ctx) error {
@@ -25,7 +25,7 @@ func CreateLibraryHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	newLibrary.Empty = make([]models.Book, 0)
+	newLibrary.Empty = make([]string, 0)
 
 	// create the library
 	collection := database.GetDBCollection("libraries")
