@@ -103,8 +103,39 @@ func GetBook(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": book})
 }
 
+type updateBookDTO struct {
+	LibraryId string `json:"libraryId,omitempty" bson:"libraryId,omitempty"`
+	Title     string `json:"title,omitempty" bson:"title,omitempty"`
+	Author    string `json:"author,omitempty" bson:"author,omitempty"`
+	ISBN      string `json:"isbn,omitempty" bson:"isbn,omitempty"`
+}
+
 func UpdateBook(c *fiber.Ctx) error {
-	return c.SendString("Update book")
+	b := new(updateBookDTO)
+	if err := c.BodyParser(b); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid body"})
+	}
+
+	// get the id
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
+	}
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	collection := database.GetDBCollection("books")
+	_, err = collection.UpdateOne(context.TODO(), bson.D{{Key: "_id", Value: objectId}}, bson.D{{Key: "$set", Value: b}})
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to update book",
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).SendString(fmt.Sprintf("Updated book with id: %s", id))
 }
 
 func DeleteBook(c *fiber.Ctx) error {

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/razak17/go-fiber-mongo/database"
@@ -114,7 +115,7 @@ func UpdateLibrary(c *fiber.Ctx) error {
 	}
 
 	collection := database.GetDBCollection("libraries")
-	result, err := collection.UpdateOne(context.TODO(), bson.M{"_id": objectId}, bson.M{"$set": l})
+	_, err = collection.UpdateOne(context.TODO(), bson.D{{Key: "_id", Value: objectId}}, bson.D{{Key: "$set", Value: l}})
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to update library",
@@ -122,8 +123,7 @@ func UpdateLibrary(c *fiber.Ctx) error {
 		})
 	}
 
-	// return the library
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"result": result})
+	return c.Status(fiber.StatusOK).SendString(fmt.Sprintf("Updated library with id: %s", id))
 }
 
 func DeleteLibrary(c *fiber.Ctx) error {
