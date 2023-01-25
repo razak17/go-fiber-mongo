@@ -37,7 +37,7 @@ func CreateLibrary(c *fiber.Ctx) error {
 	}
 
 	// return the library
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"result": result.InsertedID})
+	return c.Status(fiber.StatusCreated).SendString(fmt.Sprintf("Created book with id: %s", result.InsertedID))
 }
 
 func GetLibraries(c *fiber.Ctx) error {
@@ -115,7 +115,9 @@ func UpdateLibrary(c *fiber.Ctx) error {
 	}
 
 	collection := database.GetDBCollection("libraries")
-	_, err = collection.UpdateOne(context.TODO(), bson.D{{Key: "_id", Value: objectId}}, bson.D{{Key: "$set", Value: l}})
+	filter := bson.D{{Key: "_id", Value: objectId}}
+	update := bson.D{{Key: "$set", Value: l}}
+	_, err = collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to update library",
@@ -138,19 +140,10 @@ func DeleteLibrary(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 	}
 
-	// delete the library
-	collection := database.GetDBCollection("libraries")
-	filter := bson.D{{Key: "_id", Value: objectId}}
-	result, err := collection.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Failed to delete library",
-			"message": err.Error(),
-		})
-	}
-
 	// delete books belonging to the library
-	_, err = database.GetDBCollection("books").DeleteMany(context.TODO(), bson.D{{Key: "libraryId", Value: id}})
+	bookCollection := database.GetDBCollection("books")
+	filter := bson.D{{Key: "libraryId", Value: id}}
+	_, err = bookCollection.DeleteMany(context.TODO(), filter)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to delete library books",
@@ -158,7 +151,18 @@ func DeleteLibrary(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"result": result})
+	// delete the library
+	collection := database.GetDBCollection("libraries")
+	filter = bson.D{{Key: "_id", Value: objectId}}
+	_, err = collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to delete library",
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).SendString(fmt.Sprintf("Deleted library with id: %s", id))
 }
 
 func GetLibraryBooks(c *fiber.Ctx) error {
