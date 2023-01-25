@@ -81,7 +81,26 @@ func GetBooks(c *fiber.Ctx) error {
 }
 
 func GetBook(c *fiber.Ctx) error {
-	return c.SendString("Get book")
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
+	}
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	book := models.Book{}
+	collection := database.GetDBCollection("books")
+	err = collection.FindOne(context.TODO(), bson.D{{Key: "_id", Value: objectId}}).Decode(&book)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to get book",
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": book})
 }
 
 func UpdateBook(c *fiber.Ctx) error {

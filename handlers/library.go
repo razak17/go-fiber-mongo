@@ -16,7 +16,7 @@ type libraryDTO struct {
 	Empty   []string `json:"no_exists" bson:"books"`
 }
 
-func CreateLibraryHandler(c *fiber.Ctx) error {
+func CreateLibrary(c *fiber.Ctx) error {
 	// validate the body
 	newLibrary := new(libraryDTO)
 	if err := c.BodyParser(newLibrary); err != nil {
@@ -82,7 +82,10 @@ func GetLibrary(c *fiber.Ctx) error {
 	collection := database.GetDBCollection("libraries")
 	err = collection.FindOne(context.TODO(), bson.M{"_id": objectId}).Decode(&library)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to get library",
+			"message": err.Error(),
+		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": library})
