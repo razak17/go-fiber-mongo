@@ -92,8 +92,8 @@ func GetLibrary(c *fiber.Ctx) error {
 }
 
 type updateLibraryDTO struct {
-	Name    string `json:"name" bson:"name"`
-	Address string `json:"address" bson:"address"`
+	Name    string `json:"name,omitempty" bson:"name,omitempty"`
+	Address string `json:"address,omitempty" bson:"address,omitempty"`
 }
 
 func UpdateLibrary(c *fiber.Ctx) error {
@@ -113,12 +113,8 @@ func UpdateLibrary(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 	}
 
-	// update the library
-	filter := bson.D{{Key: "_id", Value: objectId}}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "name", Value: l.Name}, {Key: "address", Value: l.Address}}}}
-
 	collection := database.GetDBCollection("libraries")
-	result, err := collection.UpdateOne(context.TODO(), filter, update)
+	result, err := collection.UpdateOne(context.TODO(), bson.M{"_id": objectId}, bson.M{"$set": l})
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to update library",
