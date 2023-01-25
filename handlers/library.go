@@ -44,7 +44,7 @@ func GetLibraries(c *fiber.Ctx) error {
 
 	// find all libraries
 	libraries := make([]models.Library, 0)
-	cursor, err := collection.Find(context.TODO(), bson.M{})
+	cursor, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to get libraries",
@@ -53,7 +53,7 @@ func GetLibraries(c *fiber.Ctx) error {
 	}
 
 	// iterate over the cursor
-	for cursor.Next(c.Context()) {
+	for cursor.Next(context.TODO()) {
 		library := models.Library{}
 		err := cursor.Decode(&library)
 		if err != nil {
@@ -62,6 +62,7 @@ func GetLibraries(c *fiber.Ctx) error {
 		libraries = append(libraries, library)
 	}
 
+	defer cursor.Close(context.TODO())
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": libraries})
 }
 
